@@ -1,0 +1,10 @@
+inactivity:
+  enabled: true
+  days: 30
+  check-interval-minutes: 60
+  return-items: true
+messages:
+  prefix: "&6[CBMall] &r"
+  unclaimed-title: "&6Shop available"
+  unclaimed-subtitle: "&fUse &e/mall claim %plot% &fto claim this plot"
+  claimed-subtitle: "&7Owner: &f%owner%"

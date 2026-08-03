@@ -1,0 +1,20 @@
+name: CBMall
+version: '${project.version}'
+main: dev.controlbro.cbmall.CBMallPlugin
+api-version: '1.21'
+author: Controlbro
+description: Protected, claimable mall shops with inactivity recovery.
+commands:
+  mall:
+    description: Claim and manage your mall shop
+    usage: /mall <claim|addmember|removemember|members>
+  malladmin:
+    description: Administer mall shops
+    usage: /malladmin <wand|createshop|resetshop|assign|unassign>
+    permission: cbmall.admin
+  mallclaim:
+    description: Collect items recovered from an expired shop
+permissions:
+  cbmall.admin:
+    description: Full access to CBMall administration and plots
+    default: op
