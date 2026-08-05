@@ -83,6 +83,11 @@ public final class PlotManager {
                 }
     }
 
+    public void remove(Plot p) {
+        plots.remove(p.id);
+        save();
+    }
+
     public void assign(Plot p, UUID owner) {
         p.owner = owner;
         p.members.clear();

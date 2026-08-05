@@ -81,18 +81,52 @@ public final class CBMallPlugin extends JavaPlugin {
                         Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(500))));
     }
 
+    public void showBorder(Player player, Plot plot) {
+        if (plot.getWorld() == null) {
+            player.sendMessage(color(prefix() + "&cPlot world is not loaded."));
+            return;
+        }
+        for (int i = 0; i < 6; i++) {
+            getServer().getScheduler().runTaskLater(
+                    this, () -> drawPlotBorder(player, plot), i * 10L);
+        }
+    }
+
     public void openRecovery(Player p) {
+        openRecovery(p, 0);
+    }
+
+    public void openRecovery(Player p, int page) {
         List<ItemStack> items = plots.recovery(p.getUniqueId());
         if (items.isEmpty()) {
             p.closeInventory();
             p.sendMessage(color(prefix() + "&7You have no recovered items."));
             return;
         }
-        RecoveryHolder holder = new RecoveryHolder(p.getUniqueId());
-        Inventory inv = Bukkit.createInventory(holder, 54, Component.text("Recovered mall items"));
+        int totalPages = Math.max(1, (int) Math.ceil(items.size() / (double) RecoveryHolder.ITEMS_PER_PAGE));
+        int safePage = Math.max(0, Math.min(page, totalPages - 1));
+        RecoveryHolder holder = new RecoveryHolder(p.getUniqueId(), safePage);
+        Inventory inv = Bukkit.createInventory(holder, 54,
+                Component.text("Recovered mall items (" + (safePage + 1) + "/" + totalPages + ")"));
         holder.inventory = inv;
-        items.stream().limit(54).map(ItemStack::clone).forEach(inv::addItem);
+        items.stream()
+                .skip((long) safePage * RecoveryHolder.ITEMS_PER_PAGE)
+                .limit(RecoveryHolder.ITEMS_PER_PAGE)
+                .map(ItemStack::clone)
+                .forEach(inv::addItem);
+        if (safePage > 0)
+            inv.setItem(RecoveryHolder.PREVIOUS_PAGE_SLOT, pageButton(Material.ARROW, "Previous page"));
+        if (safePage < totalPages - 1)
+            inv.setItem(RecoveryHolder.NEXT_PAGE_SLOT, pageButton(Material.ARROW, "Next page"));
         p.openInventory(inv);
+    }
+
+    private ItemStack pageButton(Material material, String name) {
+        ItemStack button = new ItemStack(material);
+        var meta = button.getItemMeta();
+        meta.displayName(Component.text(name));
+        button.setItemMeta(meta);
+        return button;
     }
 
     public void notifyRecovery(Player p) {
@@ -120,29 +154,40 @@ public final class CBMallPlugin extends JavaPlugin {
             Selection s = entry.getValue();
             if (p == null || !s.complete())
                 continue;
-            Location a = s.first, b = s.second;
-            if (!a.getWorld().equals(p.getWorld()))
-                continue;
-            double minX = Math.min(a.getBlockX(), b.getBlockX()),
-                   maxX = Math.max(a.getBlockX(), b.getBlockX()) + 1,
-                   minY = Math.min(a.getBlockY(), b.getBlockY()),
-                   maxY = Math.max(a.getBlockY(), b.getBlockY()) + 1,
-                   minZ = Math.min(a.getBlockZ(), b.getBlockZ()),
-                   maxZ = Math.max(a.getBlockZ(), b.getBlockZ()) + 1;
-            for (double t = 0; t <= 1; t += 0.08) {
-                particle(p, minX + (maxX - minX) * t, minY, minZ);
-                particle(p, minX + (maxX - minX) * t, maxY, minZ);
-                particle(p, minX + (maxX - minX) * t, minY, maxZ);
-                particle(p, minX + (maxX - minX) * t, maxY, maxZ);
-                particle(p, minX, minY + (maxY - minY) * t, minZ);
-                particle(p, maxX, minY + (maxY - minY) * t, minZ);
-                particle(p, minX, minY + (maxY - minY) * t, maxZ);
-                particle(p, maxX, minY + (maxY - minY) * t, maxZ);
-                particle(p, minX, minY, minZ + (maxZ - minZ) * t);
-                particle(p, maxX, minY, minZ + (maxZ - minZ) * t);
-                particle(p, minX, maxY, minZ + (maxZ - minZ) * t);
-                particle(p, maxX, maxY, minZ + (maxZ - minZ) * t);
-            }
+            drawBorder(p, s.first.getWorld(), s.first.getBlockX(), s.first.getBlockY(),
+                    s.first.getBlockZ(), s.second.getBlockX(), s.second.getBlockY(),
+                    s.second.getBlockZ());
+        }
+    }
+
+    private void drawPlotBorder(Player player, Plot plot) {
+        World world = plot.getWorld();
+        if (world == null || !world.equals(player.getWorld()))
+            return;
+        drawBorder(player, world, plot.minX, plot.minY, plot.minZ, plot.maxX, plot.maxY,
+                plot.maxZ);
+    }
+
+    private void drawBorder(Player p, World world, int firstX, int firstY, int firstZ, int secondX,
+            int secondY, int secondZ) {
+        if (!world.equals(p.getWorld()))
+            return;
+        double minX = Math.min(firstX, secondX), maxX = Math.max(firstX, secondX) + 1,
+               minY = Math.min(firstY, secondY), maxY = Math.max(firstY, secondY) + 1,
+               minZ = Math.min(firstZ, secondZ), maxZ = Math.max(firstZ, secondZ) + 1;
+        for (double t = 0; t <= 1; t += 0.08) {
+            particle(p, minX + (maxX - minX) * t, minY, minZ);
+            particle(p, minX + (maxX - minX) * t, maxY, minZ);
+            particle(p, minX + (maxX - minX) * t, minY, maxZ);
+            particle(p, minX + (maxX - minX) * t, maxY, maxZ);
+            particle(p, minX, minY + (maxY - minY) * t, minZ);
+            particle(p, maxX, minY + (maxY - minY) * t, minZ);
+            particle(p, minX, minY + (maxY - minY) * t, maxZ);
+            particle(p, maxX, minY + (maxY - minY) * t, maxZ);
+            particle(p, minX, minY, minZ + (maxZ - minZ) * t);
+            particle(p, maxX, minY, minZ + (maxZ - minZ) * t);
+            particle(p, minX, maxY, minZ + (maxZ - minZ) * t);
+            particle(p, maxX, maxY, minZ + (maxZ - minZ) * t);
         }
     }
 
@@ -151,10 +196,15 @@ public final class CBMallPlugin extends JavaPlugin {
     }
 
     public static final class RecoveryHolder implements InventoryHolder {
+        static final int ITEMS_PER_PAGE = 45;
+        static final int PREVIOUS_PAGE_SLOT = 45;
+        static final int NEXT_PAGE_SLOT = 53;
         final UUID owner;
+        final int page;
         Inventory inventory;
-        RecoveryHolder(UUID owner) {
+        RecoveryHolder(UUID owner, int page) {
             this.owner = owner;
+            this.page = page;
         }
         @Override
         public Inventory getInventory() {

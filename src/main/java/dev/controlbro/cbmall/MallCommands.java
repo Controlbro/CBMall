@@ -26,7 +26,20 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 msg(sender, "Players only.");
                 return true;
             }
-            plugin.openRecovery(p);
+            if (args.length > 1) {
+                msg(p, "&cUsage: /mallclaim [page]");
+                return true;
+            }
+            int page = 1;
+            if (args.length == 1) {
+                try {
+                    page = Math.max(1, Integer.parseInt(args[0]));
+                } catch (NumberFormatException e) {
+                    msg(p, "&cUsage: /mallclaim [page]");
+                    return true;
+                }
+            }
+            plugin.openRecovery(p, page - 1);
             return true;
         }
         if (command.getName().equalsIgnoreCase("malladmin"))
@@ -38,7 +51,7 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             msg(p,
                     "&e/mall claim <plotid>&7, &e/mall addmember <player>&7, &e/mall removemember "
-                            + "<player>&7, &e/mall members");
+                            + "<player>&7, &e/mall members&7, &e/mall viewborder");
             return true;
         }
         Plot own = plugin.plots().ownedBy(p.getUniqueId());
@@ -87,6 +100,14 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 }
                 plugin.plots().save();
             }
+            case "viewborder" -> {
+                if (own == null) {
+                    msg(p, "&cYou do not own a plot.");
+                    break;
+                }
+                plugin.showBorder(p, own);
+                msg(p, "&aShowing border for plot &e" + own.id + "&a.");
+            }
             case "members" -> {
                 if (own == null) {
                     msg(p, "&cYou do not own a plot.");
@@ -113,8 +134,8 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         }
         if (args.length == 0) {
             msg(sender,
-                    "&e/malladmin wand|createshop|resetshop <id>|assign <id> <player>|unassign "
-                            + "<player>");
+                    "&e/malladmin wand|createshop|resetshop <id>|removeplot <id>|assign <id> "
+                            + "<player>|unassign <player>");
             return true;
         }
         switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -149,6 +170,19 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 } catch (IllegalArgumentException | IllegalStateException e) {
                     msg(p, "&c" + e.getMessage());
                 }
+            }
+            case "removeplot" -> {
+                if (args.length < 2) {
+                    msg(sender, "&cUsage: /malladmin removeplot <plotid>");
+                    break;
+                }
+                Plot p = parsePlot(args[1]);
+                if (p == null) {
+                    msg(sender, "&cUnknown plot.");
+                    break;
+                }
+                plugin.plots().remove(p);
+                msg(sender, "&aRemoved plot &e" + p.id + "&a.");
             }
             case "resetshop" -> {
                 if (args.length < 2) {
@@ -210,12 +244,15 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender s, Command c, String a, String[] args) {
+        if (c.getName().equalsIgnoreCase("mallclaim"))
+            return List.of();
         if (args.length == 1)
             return c.getName().equalsIgnoreCase("malladmin")
-                    ? List.of("wand", "createshop", "resetshop", "assign", "unassign")
-                    : List.of("claim", "addmember", "removemember", "members");
+                    ? List.of("wand", "createshop", "resetshop", "removeplot", "assign", "unassign")
+                    : List.of("claim", "addmember", "removemember", "members", "viewborder");
         if (args.length == 2
                 && (args[0].equalsIgnoreCase("claim") || args[0].equalsIgnoreCase("resetshop")
+                        || args[0].equalsIgnoreCase("removeplot")
                         || args[0].equalsIgnoreCase("assign")))
             return plugin.plots().all().stream().map(p -> String.valueOf(p.id)).toList();
         return List.of();

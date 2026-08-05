@@ -265,6 +265,16 @@ public final class MallListener implements Listener {
         if (!(e.getWhoClicked() instanceof Player player)
                 || !holder.owner.equals(player.getUniqueId()) || e.getCurrentItem() == null)
             return;
+        if (e.getRawSlot() == CBMallPlugin.RecoveryHolder.PREVIOUS_PAGE_SLOT && holder.page > 0) {
+            plugin.openRecovery(player, holder.page - 1);
+            return;
+        }
+        if (e.getRawSlot() == CBMallPlugin.RecoveryHolder.NEXT_PAGE_SLOT) {
+            plugin.openRecovery(player, holder.page + 1);
+            return;
+        }
+        if (e.getRawSlot() >= CBMallPlugin.RecoveryHolder.ITEMS_PER_PAGE)
+            return;
         ItemStack clicked = e.getCurrentItem().clone();
         Map<Integer, ItemStack> leftover = player.getInventory().addItem(clicked);
         int given = clicked.getAmount()
@@ -284,6 +294,6 @@ public final class MallListener implements Listener {
                 it.remove();
         }
         plugin.plots().save();
-        plugin.openRecovery(player);
+        plugin.openRecovery(player, holder.page);
     }
 }

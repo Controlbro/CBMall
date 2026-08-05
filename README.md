@@ -8,4 +8,4 @@ Build with Java 21 and Maven:
 mvn package
 ```
 
-Copy `target/cbmall-1.0.0.jar` into the server's `plugins` folder. See `/mall` and `/malladmin` in game for command help.
+Copy `target/cbmall-1.0.1.jar` into the server's `plugins` folder. See `/mall` and `/malladmin` in game for command help.
