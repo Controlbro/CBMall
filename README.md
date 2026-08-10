@@ -1,32 +1,40 @@
 # CBMall
 
-CBMall is a Paper 1.21-26.2 plugin providing protected, claimable mall plots, trusted members, visual selection tools, inactive shop resets, and an item recovery UI.
+**CBMall** is a Paper plugin for Minecraft **1.21–26.2** that provides protected, claimable mall plots with trusted members, visual selection tools, inactive shop resets, and an item recovery system.
 
-Build with Java 21 and Maven:
+## Features
 
-```bash
-mvn package
-```
+* Claimable and protected mall plots
+* Trusted plot members
+* Visual plot border display
+* Admin selection wand
+* Automatic plot ID assignment
+* Manual and automatic shop resets
+* Item recovery through `/mallclaim`
+* Admin plot assignment and management
 
-Copy `target/cbmall-1.0.2.jar` into the server's `plugins` folder. See `/mall` and `/malladmin` in game for command help.
+## Requirements
 
-Command Usage:
+* **Java 21**
+* **Paper 1.21–26.2**
+* **Maven**
 
-`/mall` - Displays player mall commands
-`/mall claim plotid` - Command for claiming a plot, plot ID is displayed upon walking into the plot
-`/mall addmember username` - Add selected player to owned plot as a "member", this allows that user to make changes within the plot.
-`/mall removemember username` - Remove player from plot
-`/mall members` - View list of current plot members
-`/mall viewborder` - ...
-`/mall unlock` - Can be used to unlock a container within plot, player must also unlock the container via LWC's /unlock command.
+## Command Summary
 
-`/mallclaim` - Collect items from a reset shop, these items can be from either manual admin resets, or expired shops.
+| Command                               | Description                            |
+| ------------------------------------- | -------------------------------------- |
+| `/mall`                               | Displays player mall commands          |
+| `/mall claim <plotid>`                | Claims a mall plot                     |
+| `/mall addmember <username>`          | Adds a trusted plot member             |
+| `/mall removemember <username>`       | Removes a trusted plot member          |
+| `/mall members`                       | Lists trusted plot members             |
+| `/mall viewborder`                    | Displays the plot boundary             |
+| `/mall unlock`                        | Allows a plot container to be unlocked |
+| `/mallclaim`                          | Opens the item recovery interface      |
+| `/malladmin wand`                     | Gives the plot selection wand          |
+| `/malladmin createshop`               | Creates a plot from the selected area  |
+| `/malladmin resetshop <plotid>`       | Resets a plot and returns its items    |
+| `/malladmin removeplot <plotid>`      | Removes a plot                         |
+| `/malladmin assign <plotid> <player>` | Assigns a plot to a player             |
+| `/malladmin unassign <plotid>`        | Unassigns and resets a plot            |
 
-Mall Admin Commands
-
-`/malladmin wand` - Wand for area selection
-`/malladmin createshop` - After selecting an area with the wand, use this command to create a shop within that selected area. It auto assigns an ID based on the current amount of shops.
-`/malladmin resetshop plotid` - Resets specified plot, items are returned to player via /mallclaim
-`/malladmin removeplot plotid` - Removes plot.
-`/malladmin assign plotid player` - Manually assigns a plot to a player
-`/malladmin unassign plotid` - Unassigns and resets said plot
