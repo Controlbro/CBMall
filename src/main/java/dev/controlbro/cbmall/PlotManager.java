@@ -91,6 +91,7 @@ public final class PlotManager {
     public void assign(Plot p, UUID owner) {
         p.owner = owner;
         p.members.clear();
+        p.unlockedContainers.clear();
         p.lastActive = System.currentTimeMillis();
         save();
     }
@@ -133,6 +134,7 @@ public final class PlotManager {
                 }
         p.owner = null;
         p.members.clear();
+        p.unlockedContainers.clear();
         p.lastActive = 0;
         save();
     }
@@ -169,6 +171,7 @@ public final class PlotManager {
             y.set(base + ".bounds", List.of(p.minX, p.minY, p.minZ, p.maxX, p.maxY, p.maxZ));
             y.set(base + ".owner", p.owner == null ? null : p.owner.toString());
             y.set(base + ".members", p.members.stream().map(UUID::toString).toList());
+            y.set(base + ".unlocked-containers", new ArrayList<>(p.unlockedContainers));
             y.set(base + ".last-active", p.lastActive);
             for (var e : p.original.entrySet()) {
                 String s = base + ".original." + e.getKey();
@@ -201,6 +204,7 @@ public final class PlotManager {
                 if (owner != null)
                     p.owner = UUID.fromString(owner);
                 for (String u : y.getStringList(b + ".members")) p.members.add(UUID.fromString(u));
+                p.unlockedContainers.addAll(y.getStringList(b + ".unlocked-containers"));
                 p.lastActive = y.getLong(b + ".last-active");
                 ConfigurationSection o = y.getConfigurationSection(b + ".original");
                 if (o != null)
