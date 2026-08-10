@@ -3,6 +3,8 @@ package dev.controlbro.cbmall;
 import java.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.Barrel;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
@@ -106,8 +108,15 @@ public final class MallListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void interact(PlayerInteractEvent e) {
-        if (e.getClickedBlock() == null || e.getAction() != Action.RIGHT_CLICK_BLOCK
-                || !denied(e.getPlayer(), e.getClickedBlock().getLocation()))
+        if (e.getClickedBlock() == null || e.getAction() != Action.RIGHT_CLICK_BLOCK)
+            return;
+        Plot plot = plugin.plots().at(e.getClickedBlock().getLocation());
+        if (plot == null || plot.mayBuild(e.getPlayer().getUniqueId(), admin(e.getPlayer())))
+            return;
+        if ((e.getClickedBlock().getState() instanceof Chest
+                        || e.getClickedBlock().getState() instanceof Barrel)
+                && plot.unlockedContainers.contains(plot.key(e.getClickedBlock().getX(),
+                        e.getClickedBlock().getY(), e.getClickedBlock().getZ())))
             return;
         if (e.getClickedBlock().getState() instanceof Sign)
             return;
@@ -158,7 +167,9 @@ public final class MallListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void entityChange(EntityChangeBlockEvent e) {
-        if (plugin.plots().at(e.getBlock().getLocation()) != null)
+        Plot plot = plugin.plots().at(e.getBlock().getLocation());
+        if (plot != null && (!(e.getEntity() instanceof Player player)
+                        || !plot.mayBuild(player.getUniqueId(), admin(player))))
             e.setCancelled(true);
     }
 
