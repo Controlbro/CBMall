@@ -1,5 +1,7 @@
 # CBMall
 
+(Testing server: 172.240.47.151:25599)
+
 **CBMall** is a Paper plugin for Minecraft **1.21–26.2** that provides protected, claimable mall plots with trusted members, visual selection tools, inactive shop resets, and an item recovery system.
 
 ## Features
