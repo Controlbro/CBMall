@@ -11,6 +11,7 @@ public final class Plot {
     public final int minX, minY, minZ, maxX, maxY, maxZ;
     public UUID owner;
     public final Set<UUID> members = new HashSet<>();
+    public final Set<String> unlockedContainers = new HashSet<>();
     public long lastActive;
     public final Map<String, BlockSnapshot> original = new HashMap<>();
 
