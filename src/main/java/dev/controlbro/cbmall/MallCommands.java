@@ -54,7 +54,8 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             msg(p,
                     "&e/mall claim <plotid>&7, &e/mall addmember <player>&7, &e/mall removemember "
-                            + "<player>&7, &e/mall members&7, &e/mall viewborder&7, &e/mall unlock");
+                            + "<player>&7, &e/mall members&7, &e/mall viewborder&7, &e/mall unlock&7, "
+                            + "&e/mall lock");
             return true;
         }
         Plot own = plugin.plots().ownedBy(p.getUniqueId());
@@ -144,6 +145,26 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 }
                 plugin.plots().save();
                 msg(p, "&aUnlocked this container for everyone.");
+            }
+            case "lock" -> {
+                if (own == null) {
+                    msg(p, "&cYou do not own a plot.");
+                    break;
+                }
+                Block target = p.getTargetBlockExact(5);
+                if (target == null || !own.contains(target.getLocation())
+                        || !(target.getState() instanceof Chest
+                                || target.getState() instanceof Barrel)) {
+                    msg(p, "&cLook at a chest or barrel in your plot.");
+                    break;
+                }
+                String key = own.key(target.getX(), target.getY(), target.getZ());
+                if (!own.unlockedContainers.remove(key)) {
+                    msg(p, "&eThat container is already locked.");
+                    break;
+                }
+                plugin.plots().save();
+                msg(p, "&aLocked this container.");
             }
             default -> msg(p, "&cUnknown subcommand. Use /mall for help.");
         }
@@ -272,7 +293,9 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         if (args.length == 1)
             return c.getName().equalsIgnoreCase("malladmin")
                     ? List.of("wand", "createshop", "resetshop", "removeplot", "assign", "unassign")
-                    : List.of("claim", "addmember", "removemember", "members", "viewborder", "unlock");
+                    : List.of(
+                            "claim", "addmember", "removemember", "members", "viewborder", "unlock",
+                            "lock");
         if (args.length == 2
                 && (args[0].equalsIgnoreCase("claim") || args[0].equalsIgnoreCase("resetshop")
                         || args[0].equalsIgnoreCase("removeplot")
