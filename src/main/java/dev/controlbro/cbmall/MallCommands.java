@@ -3,6 +3,9 @@ package dev.controlbro.cbmall;
 import java.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
+import org.bukkit.block.Barrel;
+import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -51,7 +54,7 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             msg(p,
                     "&e/mall claim <plotid>&7, &e/mall addmember <player>&7, &e/mall removemember "
-                            + "<player>&7, &e/mall members&7, &e/mall viewborder");
+                            + "<player>&7, &e/mall members&7, &e/mall viewborder&7, &e/mall unlock");
             return true;
         }
         Plot own = plugin.plots().ownedBy(p.getUniqueId());
@@ -121,6 +124,26 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                                 .reduce((a, b) -> a + ", " + b)
                                 .orElse("none");
                 msg(p, "&7Trusted members: &f" + names);
+            }
+            case "unlock" -> {
+                if (own == null) {
+                    msg(p, "&cYou do not own a plot.");
+                    break;
+                }
+                Block target = p.getTargetBlockExact(5);
+                if (target == null || !own.contains(target.getLocation())
+                        || !(target.getState() instanceof Chest
+                                || target.getState() instanceof Barrel)) {
+                    msg(p, "&cLook at a chest or barrel in your plot.");
+                    break;
+                }
+                String key = own.key(target.getX(), target.getY(), target.getZ());
+                if (!own.unlockedContainers.add(key)) {
+                    msg(p, "&eThat container is already unlocked.");
+                    break;
+                }
+                plugin.plots().save();
+                msg(p, "&aUnlocked this container for everyone.");
             }
             default -> msg(p, "&cUnknown subcommand. Use /mall for help.");
         }
@@ -249,7 +272,7 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
         if (args.length == 1)
             return c.getName().equalsIgnoreCase("malladmin")
                     ? List.of("wand", "createshop", "resetshop", "removeplot", "assign", "unassign")
-                    : List.of("claim", "addmember", "removemember", "members", "viewborder");
+                    : List.of("claim", "addmember", "removemember", "members", "viewborder", "unlock");
         if (args.length == 2
                 && (args[0].equalsIgnoreCase("claim") || args[0].equalsIgnoreCase("resetshop")
                         || args[0].equalsIgnoreCase("removeplot")
