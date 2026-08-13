@@ -1,5 +1,5 @@
 name: CBMall
-version: '1.0.2'
+version: '1.0.3'
 main: dev.controlbro.cbmall.CBMallPlugin
 api-version: '1.21'
 author: Controlbro
