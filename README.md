@@ -31,7 +31,7 @@
 | `/mall removemember <username>`       | Removes a trusted plot member          |
 | `/mall members`                       | Lists trusted plot members             |
 | `/mall viewborder`                    | Displays the plot boundary             |
-| `/mall unlock/lock`                        | Allows a plot container to be unlocked/locked |
+| `/mall unlock/lock`                        | Allows a plot container/door to be unlocked/locked |
 | `/mallclaim`                          | Opens the item recovery interface      |
 | `/malladmin wand`                     | Gives the plot selection wand          |
 | `/malladmin createshop`               | Creates a plot from the selected area  |
