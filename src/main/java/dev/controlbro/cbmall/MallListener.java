@@ -3,10 +3,11 @@ package dev.controlbro.cbmall;
 import java.util.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.Barrel;
-import org.bukkit.block.Chest;
+import org.bukkit.block.Lectern;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.*;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.*;
@@ -74,6 +75,12 @@ public final class MallListener implements Listener {
         if (denied(e.getPlayer(), e.getBlock().getLocation())) {
             e.setCancelled(true);
             deniedMessage(e.getPlayer());
+            return;
+        }
+        Plot plot = plugin.plots().at(e.getBlock().getLocation());
+        if (plot != null
+                && plot.unlockedContainers.removeAll(AccessTarget.keys(plot, e.getBlock()))) {
+            plugin.plots().save();
         }
     }
 
@@ -113,12 +120,10 @@ public final class MallListener implements Listener {
         Plot plot = plugin.plots().at(e.getClickedBlock().getLocation());
         if (plot == null || plot.mayBuild(e.getPlayer().getUniqueId(), admin(e.getPlayer())))
             return;
-        if ((e.getClickedBlock().getState() instanceof Chest
-                        || e.getClickedBlock().getState() instanceof Barrel)
-                && plot.unlockedContainers.contains(plot.key(e.getClickedBlock().getX(),
-                        e.getClickedBlock().getY(), e.getClickedBlock().getZ())))
+        if (AccessTarget.isUnlocked(plot, e.getClickedBlock()))
             return;
-        if (e.getClickedBlock().getState() instanceof Sign)
+        if (e.getClickedBlock().getState() instanceof Sign
+                || e.getClickedBlock().getState() instanceof Lectern)
             return;
         e.setCancelled(true);
         deniedMessage(e.getPlayer());
@@ -138,15 +143,26 @@ public final class MallListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void entityDamage(EntityDamageByEntityEvent e) {
-        if (plugin.plots().at(e.getEntity().getLocation()) == null)
+        Plot plot = plugin.plots().at(e.getEntity().getLocation());
+        if (plot == null)
             return;
-        if (e.getDamager() instanceof Player p
-                && !plugin.plots()
-                        .at(e.getEntity().getLocation())
-                        .mayBuild(p.getUniqueId(), admin(p)))
+
+        Player attacker = playerAttacker(e);
+        if (attacker != null && e.getEntity() instanceof Enemy)
+            return;
+        if (attacker != null && !plot.mayBuild(attacker.getUniqueId(), admin(attacker)))
             e.setCancelled(true);
-        else if (!(e.getDamager() instanceof Player))
+        else if (attacker == null)
             e.setCancelled(true);
+    }
+
+    private Player playerAttacker(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player player)
+            return player;
+        if (event.getDamager() instanceof Projectile projectile
+                && projectile.getShooter() instanceof Player player)
+            return player;
+        return null;
     }
 
     @EventHandler(ignoreCancelled = true)
