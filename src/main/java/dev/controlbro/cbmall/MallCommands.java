@@ -3,9 +3,7 @@ package dev.controlbro.cbmall;
 import java.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.block.Barrel;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -133,18 +131,18 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 }
                 Block target = p.getTargetBlockExact(5);
                 if (target == null || !own.contains(target.getLocation())
-                        || !(target.getState() instanceof Chest
-                                || target.getState() instanceof Barrel)) {
-                    msg(p, "&cLook at a chest or barrel in your plot.");
+                        || !AccessTarget.isUnlockable(target)) {
+                    msg(p, "&cLook at a container, door, trapdoor, or fence gate in your plot.");
                     break;
                 }
-                String key = own.key(target.getX(), target.getY(), target.getZ());
-                if (!own.unlockedContainers.add(key)) {
-                    msg(p, "&eThat container is already unlocked.");
+                Set<String> keys = AccessTarget.keys(own, target);
+                if (keys.stream().allMatch(own.unlockedContainers::contains)) {
+                    msg(p, "&eThat target is already unlocked.");
                     break;
                 }
+                own.unlockedContainers.addAll(keys);
                 plugin.plots().save();
-                msg(p, "&aUnlocked this container for everyone.");
+                msg(p, "&aUnlocked this target for everyone.");
             }
             case "lock" -> {
                 if (own == null) {
@@ -153,18 +151,18 @@ public final class MallCommands implements CommandExecutor, TabCompleter {
                 }
                 Block target = p.getTargetBlockExact(5);
                 if (target == null || !own.contains(target.getLocation())
-                        || !(target.getState() instanceof Chest
-                                || target.getState() instanceof Barrel)) {
-                    msg(p, "&cLook at a chest or barrel in your plot.");
+                        || !AccessTarget.isUnlockable(target)) {
+                    msg(p, "&cLook at a container, door, trapdoor, or fence gate in your plot.");
                     break;
                 }
-                String key = own.key(target.getX(), target.getY(), target.getZ());
-                if (!own.unlockedContainers.remove(key)) {
-                    msg(p, "&eThat container is already locked.");
+                Set<String> keys = AccessTarget.keys(own, target);
+                if (keys.stream().noneMatch(own.unlockedContainers::contains)) {
+                    msg(p, "&eThat target is already locked.");
                     break;
                 }
+                own.unlockedContainers.removeAll(keys);
                 plugin.plots().save();
-                msg(p, "&aLocked this container.");
+                msg(p, "&aLocked this target.");
             }
             default -> msg(p, "&cUnknown subcommand. Use /mall for help.");
         }
